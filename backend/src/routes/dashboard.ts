@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { DashboardController } from '../controllers/DashboardController';
+import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 
 const router = Router();
 const dashboardController = new DashboardController();
+
+// Apply authentication to all dashboard routes
+router.use(authenticate);
 
 // Get dashboard summary
 router.get('/summary', asyncHandler(dashboardController.getSummary));

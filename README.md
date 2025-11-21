@@ -9,7 +9,8 @@ A comprehensive investment tracking application for managing portfolios across B
 - 📈 **Monthly Updates**: Excel-like interface for updating investment values
 - 🎯 **Tax Reporting**: Generate tax reports for both Brazilian and US tax requirements
 - 📱 **Modern UI**: Built with React and Ant Design for a responsive experience
-- 🔒 **Ready for Authentication**: Architecture prepared for multi-user support
+- 🔒 **User Authentication**: Secure JWT-based authentication with user management
+- 📚 **API Documentation**: Interactive Swagger/OpenAPI documentation
 
 ## Tech Stack
 
@@ -70,12 +71,19 @@ npm install
 cp .env.example .env
 ```
 
-3. Set up the database:
+3. **Important**: Update the JWT_SECRET in `.env`:
+```bash
+# Generate a secure random secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Copy the output and update JWT_SECRET in .env
+```
+
+4. Set up the database:
 ```bash
 npm run migrate
 ```
 
-4. Install frontend dependencies:
+5. Install frontend dependencies:
 ```bash
 cd ../frontend
 npm install
@@ -99,7 +107,10 @@ npm run dev
 # Frontend runs on http://localhost:3000
 ```
 
-3. Open your browser and navigate to `http://localhost:3000`
+3. Open your browser:
+   - Frontend: `http://localhost:3000`
+   - API Documentation: `http://localhost:3001/api-docs`
+   - Backend API: `http://localhost:3001/api/v1`
 
 #### Production Build
 
@@ -168,26 +179,103 @@ To import your historical Excel data:
 2. Use the Import/Export feature (coming soon)
 3. Or use the provided migration scripts
 
-## API Endpoints
+## Authentication
 
-### Investments
+The API now requires authentication for all investment-related endpoints. Here's how to get started:
+
+### 1. Register a New User
+```bash
+POST /api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "SecurePass123",
+  "name": "John Doe"
+}
+```
+
+### 2. Login
+```bash
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "SecurePass123"
+}
+```
+
+Response includes a JWT token:
+```json
+{
+  "success": true,
+  "data": {
+    "user": { ... },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+### 3. Use Token for API Requests
+Include the token in the Authorization header:
+```bash
+Authorization: Bearer <your-token-here>
+```
+
+### Password Requirements
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+
+## API Documentation
+
+Interactive API documentation is available via Swagger UI:
+- **URL**: `http://localhost:3001/api-docs`
+- **Features**:
+  - Try out API endpoints directly from the browser
+  - View request/response schemas
+  - Test authentication flows
+  - View all available endpoints with detailed descriptions
+
+### Authentication Endpoints
+- `POST /api/v1/auth/register` - Register a new user
+- `POST /api/v1/auth/login` - Login and receive JWT token
+- `GET /api/v1/auth/verify` - Verify token validity
+- `GET /api/v1/auth/profile` - Get current user profile
+- `PUT /api/v1/auth/profile` - Update user profile
+- `POST /api/v1/auth/change-password` - Change password
+
+### Investment Endpoints (Authentication Required)
 - `GET /api/v1/investments` - List all investments
 - `POST /api/v1/investments` - Create new investment
+- `GET /api/v1/investments/:id` - Get investment by ID
 - `PUT /api/v1/investments/:id` - Update investment
 - `DELETE /api/v1/investments/:id` - Delete investment
 - `POST /api/v1/investments/:id/mark-done` - Mark as completed
+- `GET /api/v1/investments/summary` - Get investments summary
+- `GET /api/v1/investments/upcoming-maturities` - Get upcoming maturities
 
-### Snapshots
+### Snapshot Endpoints (Authentication Required)
 - `GET /api/v1/snapshots/monthly` - Get monthly snapshots
+- `GET /api/v1/snapshots/investment/:id` - Get snapshots for investment
+- `POST /api/v1/snapshots` - Create snapshot
 - `POST /api/v1/snapshots/bulk-update` - Bulk update values
 
-### Dashboard
+### Dashboard Endpoints (Authentication Required)
 - `GET /api/v1/dashboard/summary` - Get dashboard summary
 - `GET /api/v1/dashboard/evolution` - Get portfolio evolution
+- `GET /api/v1/dashboard/allocation` - Get asset allocation
 
-### Tax
-- `GET /api/v1/tax/report` - Generate tax report
-- `GET /api/v1/tax/events` - Get taxable events
+### Exchange Rate Endpoints (Authentication Required)
+- `GET /api/v1/exchange-rates/current` - Get current rate
+- `GET /api/v1/exchange-rates/history` - Get historical rates
+- `POST /api/v1/exchange-rates` - Update exchange rate
+
+### Tax Endpoints (Authentication Required)
+- `GET /api/v1/tax/report` - Generate tax report (coming soon)
+- `GET /api/v1/tax/events` - Get taxable events (coming soon)
 
 ## Environment Variables
 
@@ -209,9 +297,20 @@ The application uses SQLite with the following main tables:
 - `tax_events` - Taxable events tracking
 - `users` - User accounts (for future multi-user support)
 
+## Security Features
+
+- ✅ JWT-based authentication
+- ✅ Password hashing with bcrypt
+- ✅ Input validation on all endpoints
+- ✅ Rate limiting (100 requests per 15 minutes)
+- ✅ CORS configuration
+- ✅ Helmet.js security headers
+- ✅ SQL injection protection via parameterized queries
+
 ## Future Enhancements
 
-- [ ] Multi-user support with authentication
+- [x] Multi-user support with authentication ✅
+- [x] Comprehensive API documentation ✅
 - [ ] Automated price updates via financial APIs
 - [ ] Advanced analytics and charts
 - [ ] Mobile application
